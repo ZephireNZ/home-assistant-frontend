@@ -42,6 +42,11 @@ import {
   fetchInputText,
   updateInputText,
 } from "../../../../../data/input_text";
+import {
+  deleteTemplateBinarySensor,
+  fetchTemplateBinarySensor,
+  updateTemplateBinarySensor,
+} from "../../../../../data/template.binary_sensor";
 import { showConfirmationDialog } from "../../../../../dialogs/generic/show-dialog-box";
 import type { HomeAssistant } from "../../../../../types";
 import type { Helper } from "../../../helpers/const";
@@ -78,6 +83,11 @@ const HELPERS = {
     fetch: fetchInputSelect,
     update: updateInputSelect,
     delete: deleteInputSelect,
+  },
+  binary_sensor: {
+    fetch: fetchTemplateBinarySensor,
+    update: updateTemplateBinarySensor,
+    delete: deleteTemplateBinarySensor,
   },
 };
 
@@ -119,6 +129,28 @@ export class EntityRegistrySettingsHelper extends LitElement {
       return html``;
     }
     const stateObj = this.hass.states[this.entry.entity_id];
+
+    let disabled = false;
+
+    switch (this.entry.platform) {
+      case "input_boolean":
+      case "input_datetime":
+      case "input_number":
+      case "input_select":
+      case "input_text":
+        disabled = disabled || !this._item?.name || false;
+        break;
+      case "binary_sensor":
+        disabled =
+          disabled ||
+          !this._item?.friendly_name ||
+          !this._item?.value_template ||
+          false;
+        break;
+      default:
+        break;
+    }
+
     return html`
       <paper-dialog-scrollable .dialogElement=${this.dialogElement}>
         ${this._error ? html` <div class="error">${this._error}</div> ` : ""}
@@ -155,10 +187,7 @@ export class EntityRegistrySettingsHelper extends LitElement {
         >
           ${this.hass.localize("ui.dialogs.entity_registry.editor.delete")}
         </mwc-button>
-        <mwc-button
-          @click=${this._updateItem}
-          .disabled=${this._submitting || (this._item && !this._item.name)}
-        >
+        <mwc-button @click=${this._updateItem} .disabled=${disabled}>
           ${this.hass.localize("ui.dialogs.entity_registry.editor.update")}
         </mwc-button>
       </div>
