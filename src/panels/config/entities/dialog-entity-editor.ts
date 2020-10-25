@@ -32,6 +32,7 @@ import type { HomeAssistant } from "../../../types";
 import { PLATFORMS_WITH_SETTINGS_TAB } from "./const";
 import "./entity-registry-settings";
 import type { EntityRegistryDetailDialogParams } from "./show-dialog-entity-editor";
+import { fetchTemplateEntities } from "../../../data/template";
 
 interface Tabs {
   [key: string]: Tab;
@@ -221,6 +222,14 @@ export class DialogEntityEditor extends LitElement {
     if (!this._entry) {
       return;
     }
+
+    const templates = await fetchTemplateEntities(this.hass);
+
+    if (templates.includes(this._entry.entity_id)) {
+      this._settingsElementTag = "entity-settings-helper-tab";
+      return;
+    }
+
     if (
       !Object.keys(PLATFORMS_WITH_SETTINGS_TAB).includes(this._entry.platform)
     ) {

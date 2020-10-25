@@ -5,6 +5,7 @@ import { InputSelect } from "../../../data/input_select";
 import { InputText } from "../../../data/input_text";
 import { Counter } from "../../../data/counter";
 import { Timer } from "../../../data/timer";
+import { TemplateBinarySensor } from "../../../data/template.binary_sensor";
 
 export const HELPER_DOMAINS = [
   "input_boolean",
@@ -23,4 +24,5 @@ export type Helper =
   | InputSelect
   | InputDateTime
   | Counter
-  | Timer;
+  | Timer
+  | TemplateBinarySensor;

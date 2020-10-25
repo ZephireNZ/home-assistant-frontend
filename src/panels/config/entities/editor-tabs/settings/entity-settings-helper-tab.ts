@@ -52,6 +52,11 @@ import {
   fetchTimer,
   updateTimer,
 } from "../../../../../data/timer";
+import {
+  deleteTemplateBinarySensor,
+  fetchTemplateBinarySensor,
+  updateTemplateBinarySensor,
+} from "../../../../../data/template.binary_sensor";
 import { showConfirmationDialog } from "../../../../../dialogs/generic/show-dialog-box";
 import type { HomeAssistant } from "../../../../../types";
 import type { Helper } from "../../../helpers/const";
@@ -62,6 +67,7 @@ import "../../../helpers/forms/ha-input_select-form";
 import "../../../helpers/forms/ha-input_text-form";
 import "../../../helpers/forms/ha-counter-form";
 import "../../../helpers/forms/ha-timer-form";
+import "../../../helpers/forms/ha-binary_sensor-form";
 import "../../entity-registry-basic-editor";
 import type { HaEntityRegistryBasicEditor } from "../../entity-registry-basic-editor";
 import { haStyle } from "../../../../../resources/styles";
@@ -102,6 +108,11 @@ const HELPERS = {
     update: updateTimer,
     delete: deleteTimer,
   },
+  binary_sensor: {
+    fetch: fetchTemplateBinarySensor,
+    update: updateTemplateBinarySensor,
+    delete: deleteTemplateBinarySensor,
+  },
 };
 
 @customElement("entity-settings-helper-tab")
@@ -140,6 +151,28 @@ export class EntityRegistrySettingsHelper extends LitElement {
       return html``;
     }
     const stateObj = this.hass.states[this.entry.entity_id];
+
+    let disabled = false;
+
+    switch (this.entry.platform) {
+      case "input_boolean":
+      case "input_datetime":
+      case "input_number":
+      case "input_select":
+      case "input_text":
+        disabled = disabled || !this._item?.name || false;
+        break;
+      case "binary_sensor":
+        disabled =
+          disabled ||
+          !this._item?.friendly_name ||
+          !this._item?.value_template ||
+          false;
+        break;
+      default:
+        break;
+    }
+
     return html`
       ${this._error ? html` <div class="error">${this._error}</div> ` : ""}
       <div class="form">
@@ -174,10 +207,7 @@ export class EntityRegistrySettingsHelper extends LitElement {
         >
           ${this.hass.localize("ui.dialogs.entity_registry.editor.delete")}
         </mwc-button>
-        <mwc-button
-          @click=${this._updateItem}
-          .disabled=${this._submitting || (this._item && !this._item.name)}
-        >
+        <mwc-button @click=${this._updateItem} .disabled=${disabled}>
           ${this.hass.localize("ui.dialogs.entity_registry.editor.update")}
         </mwc-button>
       </div>
