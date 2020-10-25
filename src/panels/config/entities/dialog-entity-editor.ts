@@ -226,6 +226,7 @@ export class DialogEntityEditor extends LitElement {
     const templates = await fetchTemplateEntities(this.hass);
 
     if (templates.includes(this._entry.entity_id)) {
+      await import(`./editor-tabs/settings/entity-settings-helper-tab`);
       this._settingsElementTag = "entity-settings-helper-tab";
       return;
     }
