@@ -128,6 +128,13 @@ export interface EntityRegistryOptions {
   "cloud.google_assistant"?: Record<string, unknown>;
 }
 
+export interface VoiceAssistantOptions {
+  name?: string;
+  room_override?: string;
+  description?: string;
+  display_categories?: string[];
+}
+
 export interface EntityRegistryEntryUpdateParams {
   name?: string | null;
   icon?: string | null;
@@ -143,7 +150,8 @@ export interface EntityRegistryEntryUpdateParams {
     | LockEntityOptions
     | AlarmControlPanelEntityOptions
     | WeatherEntityOptions
-    | LightEntityOptions;
+    | LightEntityOptions
+    | VoiceAssistantOptions;
   aliases?: string[];
   labels?: string[];
   categories?: { [scope: string]: string | null };

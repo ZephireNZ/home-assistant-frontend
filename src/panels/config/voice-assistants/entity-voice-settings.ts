@@ -61,6 +61,14 @@ export class EntityVoiceSettings extends SubscribeMixin(LitElement) {
     Record<"cloud.google_assistant" | "cloud.alexa" | "conversation", boolean>
   > = {};
 
+  @state() private _nameOverride: string = "";
+
+  @state() private _roomHint!: string;
+
+  @state() private _description!: string;
+
+  @state() private _displayCategories!: string[];
+
   protected willUpdate(changedProps: PropertyValues<this>) {
     if (!isComponentLoaded(this.hass, "cloud")) {
       return;
@@ -72,6 +80,15 @@ export class EntityVoiceSettings extends SubscribeMixin(LitElement) {
       fetchCloudStatus(this.hass).then((status) => {
         this._cloudStatus = status;
       });
+    }
+
+    // Find the first name override to populate the field
+    for (const assistant of Object.keys(voiceAssistants)) {
+      const config = this.entry?.options?.[assistant];
+      if (config && config.name) {
+        this._nameOverride = config.name;
+        break;
+      }
     }
   }
 
@@ -288,12 +305,28 @@ export class EntityVoiceSettings extends SubscribeMixin(LitElement) {
               }
             )}
           </ha-alert>`
-        : html`<ha-aliases-editor
-            .hass=${this.hass}
-            .aliases=${this._aliases ?? this.entry.aliases}
-            @value-changed=${this._aliasesChanged}
-            @blur=${this._saveAliases}
-          ></ha-aliases-editor>`}
+        : html`
+            <ha-aliases-editor
+              .hass=${this.hass}
+              .aliases=${this._aliases ?? this.entry.aliases}
+              @value-changed=${this._aliasesChanged}
+              @blur=${this._saveAliases}
+            ></ha-aliases-editor>
+
+            ${!this.hass.userData?.showAdvanced && uiExposed
+              ? nothing
+              : html`
+                  <ha-textfield
+                    .assistants=${uiAssistants}
+                    .value=${this._nameOverride}
+                    .label=${this.hass.localize(
+                      "ui.dialogs.voice-settings.name_override"
+                    )}
+                    .placeholder=${this.entry.name}
+                    @blur=${this._nameOverrideChanged}
+                  ></ha-textfield>
+                `}
+          `}
     `;
   }
 
@@ -366,6 +399,30 @@ export class EntityVoiceSettings extends SubscribeMixin(LitElement) {
       fireEvent(this, "entity-entry-updated", entry);
     }
     fireEvent(this, "exposed-entities-changed");
+  }
+
+  private async _nameOverrideChanged(ev) {
+    if (!this.entry) return;
+
+    const newName =
+      this._nameOverride.trim() === "" ? undefined : this._nameOverride.trim();
+
+    const assistants: (keyof typeof voiceAssistants)[] = ev.target.assistants;
+
+    for await (const assistant of assistants) {
+      const existingOptions = this.entry.options?.[assistant];
+      const existingName = existingOptions?.name ?? this.entry.name;
+      if (this._nameOverride === existingName) continue;
+
+      const result = await updateEntityRegistryEntry(this.hass, this.entityId, {
+        options_domain: assistant,
+        options: {
+          ...existingOptions,
+          name: newName,
+        },
+      });
+      fireEvent(this, "entity-entry-updated", result.entity_entry);
+    }
   }
 
   static get styles(): CSSResultGroup {

@@ -1426,7 +1426,8 @@
         "ask_pin": "Ask for PIN",
         "manual_config": "Managed in configuration.yaml",
         "unsupported": "Unsupported",
-        "view_entity": "More info about entity"
+        "view_entity": "More info about entity",
+        "name_override": "Name override"
       },
       "restart": {
         "heading": "Restart Home Assistant",
